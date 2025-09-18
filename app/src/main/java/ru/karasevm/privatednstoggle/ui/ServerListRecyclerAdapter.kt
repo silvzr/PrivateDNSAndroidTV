@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.materialswitch.MaterialSwitch
 import ru.karasevm.privatednstoggle.R
 import ru.karasevm.privatednstoggle.model.DnsServer
 
@@ -88,7 +88,7 @@ class ServerListRecyclerAdapter :
     inner class DnsServerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val labelTextView: TextView = view.findViewById(R.id.labelTextView)
         val serverTextView: TextView = view.findViewById(R.id.textView)
-        val dnsSwitch: SwitchMaterial = view.findViewById(R.id.dns_switch)
+        val dnsSwitch: MaterialSwitch = view.findViewById(R.id.dns_switch)
         var id = 0
 
         init {

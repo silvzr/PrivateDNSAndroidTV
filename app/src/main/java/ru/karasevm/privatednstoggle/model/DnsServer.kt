@@ -18,7 +18,7 @@ data class DnsServer(
     @SerialName("label")
     val label: String = "",
     @SerialName("enabled")
-    @ColumnInfo(defaultValue = "1")
-    val enabled: Boolean = true,
+    @ColumnInfo(defaultValue = "0")
+    val enabled: Boolean = false,
     val sortOrder: Int? = null
 )

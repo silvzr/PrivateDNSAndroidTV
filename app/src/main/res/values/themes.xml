@@ -1,5 +1,6 @@
 <resources>
     <style name="Theme.MyApplication" parent="Theme.Material3.Light.NoActionBar">
+        <item name="switchStyle">@style/Widget.Material3.CompoundButton.Switch</item>
         <item name="colorPrimary">@color/md_theme_light_primary</item>
         <item name="colorSecondary">@color/md_theme_light_secondary</item>
         <item name="colorTertiary">@color/md_theme_light_tertiary</item>
