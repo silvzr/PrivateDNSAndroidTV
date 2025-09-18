@@ -42,7 +42,7 @@ class DNSServerDialogFragment : DialogFragment() {
             linearLayoutManager = LinearLayoutManager(context)
             binding.recyclerView.layoutManager = linearLayoutManager
 
-            adapter = ServerListRecyclerAdapter(false)
+            adapter = ServerListRecyclerAdapter()
             binding.recyclerView.adapter = adapter
             lifecycleScope.launch {
                 dnsServerViewModel.getAll().collect { s ->
