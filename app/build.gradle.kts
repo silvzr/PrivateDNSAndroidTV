@@ -39,7 +39,14 @@ android {
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
         }
         debug {
-            applicationIdSuffix = ".dev"
+            applicationIdSuffix = ".tv"
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
         }
     }
