@@ -40,6 +40,12 @@ android {
         }
         debug {
             applicationIdSuffix = ".dev"
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
         }
     }
