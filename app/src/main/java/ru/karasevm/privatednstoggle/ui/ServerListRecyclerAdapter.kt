@@ -2,26 +2,24 @@ package ru.karasevm.privatednstoggle.ui
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.materialswitch.MaterialSwitch
 import ru.karasevm.privatednstoggle.R
 import ru.karasevm.privatednstoggle.model.DnsServer
 
 
-class ServerListRecyclerAdapter(private val showDragHandle: Boolean) :
+class ServerListRecyclerAdapter :
     RecyclerView.Adapter<ServerListRecyclerAdapter.DnsServerViewHolder>() {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DnsServerViewHolder {
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_row, parent, false)
-        val vh = DnsServerViewHolder(view)
-        return vh
+        return DnsServerViewHolder(view)
     }
 
     override fun getItemCount(): Int {
@@ -29,7 +27,7 @@ class ServerListRecyclerAdapter(private val showDragHandle: Boolean) :
     }
 
     var onItemClick: ((Int) -> Unit)? = null
-    var onDragStart: ((DnsServerViewHolder) -> Unit)? = null
+    var onItemSwitch: ((Int, Boolean) -> Unit)? = null
     private var items: MutableList<DnsServer> = mutableListOf()
 
     @SuppressLint("ClickableViewAccessibility")
@@ -43,32 +41,11 @@ class ServerListRecyclerAdapter(private val showDragHandle: Boolean) :
         }
         holder.serverTextView.text = item.server
         holder.id = item.id
-        if (item.enabled) {
-            holder.labelTextView.alpha = 1f
-            holder.serverTextView.alpha = 1f
-        } else {
-            holder.labelTextView.alpha = 0.5f
-            holder.serverTextView.alpha = 0.5f
+        holder.dnsSwitch.setOnCheckedChangeListener(null)
+        holder.dnsSwitch.isChecked = item.enabled
+        holder.dnsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            onItemSwitch?.invoke(item.id, isChecked)
         }
-        if (showDragHandle) {
-            holder.dragHandle.visibility = View.VISIBLE
-            holder.dragHandle.setOnTouchListener { _, event ->
-                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                    onDragStart?.invoke(holder)
-                }
-                return@setOnTouchListener true
-            }
-        }
-    }
-
-    /**
-     *  Update server position in memory
-     *  @param fromPosition old position
-     *  @param toPosition new position
-     */
-    fun onItemMove(fromPosition: Int, toPosition: Int) {
-        items.add(toPosition, items.removeAt(fromPosition))
-        notifyItemMoved(fromPosition, toPosition)
     }
 
     class DiffCallback(
@@ -111,11 +88,12 @@ class ServerListRecyclerAdapter(private val showDragHandle: Boolean) :
     inner class DnsServerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val labelTextView: TextView = view.findViewById(R.id.labelTextView)
         val serverTextView: TextView = view.findViewById(R.id.textView)
-        val dragHandle: ImageView = itemView.findViewById(R.id.dragHandle)
+        val dnsSwitch: MaterialSwitch = view.findViewById(R.id.dns_switch)
+        private val serverInfoLayout: View = view.findViewById(R.id.server_info_layout)
         var id = 0
 
         init {
-            view.setOnClickListener {
+            serverInfoLayout.setOnClickListener {
                 onItemClick?.invoke(id)
             }
         }

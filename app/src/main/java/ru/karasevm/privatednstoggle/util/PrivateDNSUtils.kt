@@ -49,6 +49,17 @@ object PrivateDNSUtils {
         Settings.Global.putString(contentResolver, PRIVATE_DNS_PROVIDER, value)
     }
 
+    fun setPrivateDns(contentResolver: ContentResolver, value: String) {
+        if (value == DNS_MODE_OFF) {
+            setPrivateMode(contentResolver, DNS_MODE_OFF)
+        } else if (value == DNS_MODE_AUTO) {
+            setPrivateMode(contentResolver, DNS_MODE_AUTO)
+        } else {
+            setPrivateMode(contentResolver, DNS_MODE_PRIVATE)
+            setPrivateProvider(contentResolver, value)
+        }
+    }
+
     fun checkForPermission(context: Context): Boolean {
         return (checkSelfPermission(
             context, Manifest.permission.WRITE_SECURE_SETTINGS

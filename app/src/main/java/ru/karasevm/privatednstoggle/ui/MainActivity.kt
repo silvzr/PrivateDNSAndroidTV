@@ -20,9 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ShareCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ItemTouchHelper.DOWN
-import androidx.recyclerview.widget.ItemTouchHelper.UP
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
@@ -38,6 +35,7 @@ import ru.karasevm.privatednstoggle.model.DnsServer
 import ru.karasevm.privatednstoggle.util.BackupUtils
 import ru.karasevm.privatednstoggle.util.PreferenceHelper
 import ru.karasevm.privatednstoggle.util.PreferenceHelper.dns_servers
+import ru.karasevm.privatednstoggle.util.PrivateDNSUtils
 import ru.karasevm.privatednstoggle.util.ShizukuUtil.grantPermissionWithShizuku
 
 
@@ -50,69 +48,6 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
     private lateinit var adapter: ServerListRecyclerAdapter
     private lateinit var clipboard: ClipboardManager
     private val dnsServerViewModel: DnsServerViewModel by viewModels { DnsServerViewModelFactory((application as PrivateDNSApp).repository) }
-
-    private val itemTouchHelper by lazy {
-        val simpleItemTouchCallback =
-            object : ItemTouchHelper.SimpleCallback(UP or DOWN, 0) {
-                var dragFrom = -1
-                var dragTo = -1
-
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    if (dragFrom == viewHolder.bindingAdapterPosition && dragTo == target.bindingAdapterPosition) {
-                        return true
-                    }
-                    // store the drag position
-                    if (dragFrom == -1) dragFrom = viewHolder.bindingAdapterPosition
-                    dragTo = target.bindingAdapterPosition
-                    adapter.onItemMove(
-                        viewHolder.bindingAdapterPosition,
-                        target.bindingAdapterPosition
-                    )
-                    return true
-                }
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
-
-                override fun onSelectedChanged(
-                    viewHolder: RecyclerView.ViewHolder?, actionState: Int
-                ) {
-                    super.onSelectedChanged(viewHolder, actionState)
-                    if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
-                        viewHolder?.itemView?.apply {
-                            // Example: Elevate the view
-                            elevation = 8f
-                            alpha = 0.5f
-                            setBackgroundColor(Color.GRAY)
-                        }
-                    }
-                }
-
-                override fun clearView(
-                    recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder
-                ) {
-                    super.clearView(recyclerView, viewHolder)
-                    viewHolder.itemView.apply {
-                        // Reset the appearance
-                        elevation = 0f
-                        alpha = 1.0f
-                        setBackgroundColor(Color.TRANSPARENT)
-                    }
-                    // commit the change to the db
-                    dnsServerViewModel.move(
-                        dragFrom,
-                        dragTo,
-                        (viewHolder as ServerListRecyclerAdapter.DnsServerViewHolder).id
-                    )
-                    dragTo = -1
-                    dragFrom = -1
-                }
-            }
-        ItemTouchHelper(simpleItemTouchCallback)
-    }
 
     private fun importSettings(json: String) {
         runCatching {
@@ -178,7 +113,7 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
 
         migrateServerList()
 
-        adapter = ServerListRecyclerAdapter(true)
+        adapter = ServerListRecyclerAdapter()
         binding.recyclerView.adapter = adapter
 
         dnsServerViewModel.allServers.observe(this) { servers ->
@@ -201,15 +136,37 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                 }
             }
         }
-        adapter.onDragStart = { viewHolder ->
-            itemTouchHelper.startDrag(viewHolder)
+        adapter.onItemSwitch = { id, isChecked ->
+            dnsServerViewModel.viewModelScope.launch {
+                if (isChecked) {
+                    val server = dnsServerViewModel.getById(id)
+                    if (server != null) {
+                        PrivateDNSUtils.setPrivateDns(
+                            contentResolver,
+                            server.server
+                        )
+                        sharedPrefs.edit().putString("set_last_server", server.server).apply()
+                        dnsServerViewModel.allServers.value?.forEach {
+                            if (it.id != id && it.enabled) {
+                                dnsServerViewModel.update(it.id, it.server, it.label, 0, false)
+                            }
+                        }
+                    }
+                } else {
+                    PrivateDNSUtils.setPrivateDns(
+                        contentResolver,
+                        "off"
+                    )
+                    sharedPrefs.edit().putString("set_last_server", "off").apply()
+                }
+                dnsServerViewModel.update(id, null, null, null, isChecked)
+            }
         }
         binding.floatingActionButton.setOnClickListener {
             val newFragment = AddServerDialogFragment(null)
             newFragment.show(supportFragmentManager, "add_server")
         }
         binding.recyclerView.adapter = adapter
-        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
 
         binding.topAppBar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -445,14 +402,13 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
     override fun onUpdateDialogPositiveClick(
         id: Int,
         server: String,
-        label: String?,
-        enabled: Boolean
+        label: String?
     ) {
         if (server.isEmpty()) {
             Toast.makeText(this, R.string.server_length_error, Toast.LENGTH_SHORT).show()
             return
         }
-        dnsServerViewModel.update(id, server, label, null, enabled)
+        dnsServerViewModel.update(id, server, label, null, null)
     }
 
     private fun grantPermission() {

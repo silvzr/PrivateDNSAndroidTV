@@ -7,6 +7,33 @@
     tools:context=".ui.MainActivity"
     android:fitsSystemWindows="true">
 
+    <!-- Permission request simple view for TV when Shizuku/WRITE_SECURE_SETTINGS not granted -->
+    <LinearLayout
+        android:id="@+id/permission_request_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/permission_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/shizuku_failure_toast"
+            android:padding="16dp"/>
+
+        <Button
+            android:id="@+id/permission_request_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/request_permission" />
+    </LinearLayout>
+
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/topAppBarLayout"
         android:layout_width="match_parent"

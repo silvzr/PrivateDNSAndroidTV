@@ -33,7 +33,7 @@ class AddServerDialogFragment(
      * Each method passes the DialogFragment in case the host needs to query it. */
     interface NoticeDialogListener {
         fun onAddDialogPositiveClick(label: String?, server: String)
-        fun onUpdateDialogPositiveClick(id: Int, server: String, label: String?, enabled: Boolean)
+        fun onUpdateDialogPositiveClick(id: Int, server: String, label: String?)
         fun onDeleteItemClicked(id: Int)
     }
 
@@ -68,8 +68,6 @@ class AddServerDialogFragment(
             if (dnsServer != null) {
                 binding.editTextServerHint.setText(dnsServer.label)
                 binding.editTextServerAddr.setText(dnsServer.server)
-                binding.serverEnabledSwitch.visibility = android.view.View.VISIBLE
-                binding.serverEnabledSwitch.isChecked = dnsServer.enabled
                 builder.setTitle(R.string.edit_server).setView(view)
                     .setPositiveButton(
                         R.string.menu_save
@@ -77,8 +75,7 @@ class AddServerDialogFragment(
                         listener.onUpdateDialogPositiveClick(
                             dnsServer.id,
                             binding.editTextServerAddr.text.toString().trim(),
-                            binding.editTextServerHint.text.toString().trim(),
-                            binding.serverEnabledSwitch.isChecked
+                            binding.editTextServerHint.text.toString().trim()
                         )
                     }
                     .setNegativeButton(
