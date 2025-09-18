@@ -402,14 +402,13 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
     override fun onUpdateDialogPositiveClick(
         id: Int,
         server: String,
-        label: String?,
-        enabled: Boolean
+        label: String?
     ) {
         if (server.isEmpty()) {
             Toast.makeText(this, R.string.server_length_error, Toast.LENGTH_SHORT).show()
             return
         }
-        dnsServerViewModel.update(id, server, label, null, enabled)
+        dnsServerViewModel.update(id, server, label, null, null)
     }
 
     private fun grantPermission() {
