@@ -236,12 +236,6 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                     true
                 }
 
-                R.id.options -> {
-                    val newFragment = OptionsDialogFragment()
-                    newFragment.show(supportFragmentManager, "options")
-                    true
-                }
-
                 R.id.open_source_licenses -> {
                     // start license activity
                     val intent = Intent(this, AboutLibsActivity::class.java)
