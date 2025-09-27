@@ -8,11 +8,20 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.Log
+import android.util.TypedValue
 import android.view.Menu
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -105,6 +114,31 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
         val view = binding.root
         setContentView(view)
 
+        val subtext = binding.missingPermissionView.errorSubtext
+        val fullText = getString(R.string.missing_permission_subtitle)
+        val linkText = "github.com/silvzr/PrivateDNSAndroidTV"
+        val spannableString = SpannableString(fullText)
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://$linkText"))
+                startActivity(browserIntent)
+            }
+        }
+
+        val startIndex = fullText.indexOf(linkText)
+        val endIndex = startIndex + linkText.length
+
+        val typedValue = TypedValue()
+        theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
+        val errorColor = typedValue.data
+
+        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannableString.setSpan(StyleSpan(android.graphics.Typeface.BOLD), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannableString.setSpan(ForegroundColorSpan(errorColor), startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        subtext.text = spannableString
+        subtext.movementMethod = LinkMovementMethod.getInstance()
+
         linearLayoutManager = LinearLayoutManager(this)
         binding.recyclerView.layoutManager = linearLayoutManager
 
@@ -118,7 +152,7 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
 
         dnsServerViewModel.allServers.observe(this) { servers ->
             adapter.submitList(servers)
-            if (servers.isEmpty()) {
+            if (servers.isEmpty() && binding.missingPermissionView.root.visibility != View.VISIBLE) {
                 binding.emptyView.visibility = View.VISIBLE
                 binding.emptyViewHint.visibility = View.VISIBLE
             } else {
@@ -316,15 +350,12 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                 }
             } else {
                 if (checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-                    val browserIntent = Intent(
-                        Intent.ACTION_VIEW,
-                        "https://karasevm.github.io/PrivateDNSAndroid/".toUri()
-                    )
-                    Toast.makeText(
-                        this, R.string.shizuku_failure_toast, Toast.LENGTH_SHORT
-                    ).show()
-                    startActivity(browserIntent)
-                    finish()
+                    binding.missingPermissionView.root.visibility = View.VISIBLE
+                    binding.topAppBarLayout.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                    binding.floatingActionButton.visibility = View.GONE
+                    binding.emptyView.visibility = View.GONE
+                    binding.emptyViewHint.visibility = View.GONE
                 }
             }
         }
@@ -411,14 +442,12 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                 this, R.string.shizuku_success_toast, Toast.LENGTH_SHORT
             ).show()
         } else {
-            Toast.makeText(
-                this, R.string.shizuku_failure_toast, Toast.LENGTH_SHORT
-            ).show()
-            val browserIntent = Intent(
-                Intent.ACTION_VIEW, "https://karasevm.github.io/PrivateDNSAndroid/".toUri()
-            )
-            startActivity(browserIntent)
-            finish()
+            binding.missingPermissionView.root.visibility = View.VISIBLE
+            binding.topAppBarLayout.visibility = View.GONE
+            binding.recyclerView.visibility = View.GONE
+            binding.floatingActionButton.visibility = View.GONE
+            binding.emptyView.visibility = View.GONE
+            binding.emptyViewHint.visibility = View.GONE
         }
     }
 
@@ -426,11 +455,12 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
         val isGranted = grantResult == PackageManager.PERMISSION_GRANTED
 
         if (!isGranted && checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
-            val browserIntent = Intent(
-                Intent.ACTION_VIEW, "https://karasevm.github.io/PrivateDNSAndroid/".toUri()
-            )
-            startActivity(browserIntent)
-            finish()
+            binding.missingPermissionView.root.visibility = View.VISIBLE
+            binding.topAppBarLayout.visibility = View.GONE
+            binding.recyclerView.visibility = View.GONE
+            binding.floatingActionButton.visibility = View.GONE
+            binding.emptyView.visibility = View.GONE
+            binding.emptyViewHint.visibility = View.GONE
         }
     }
 }

@@ -54,4 +54,6 @@
     <string name="shortcut_switch_mode">Switch mode</string>
     <string name="open_source_licenses">Open-source licenses</string>
     <string name="add_server_enabled">Enabled</string>
+    <string name="missing_permission_title">Missing permission</string>
+    <string name="missing_permission_subtitle">Go to github.com/silvzr/PrivateDNSAndroidTV to see how to enable it</string>
 </resources>
