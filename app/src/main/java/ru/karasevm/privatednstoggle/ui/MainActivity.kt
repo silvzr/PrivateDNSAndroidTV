@@ -31,6 +31,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.io.File
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import rikka.shizuku.Shizuku
@@ -41,6 +43,7 @@ import ru.karasevm.privatednstoggle.data.DnsServerViewModel
 import ru.karasevm.privatednstoggle.data.DnsServerViewModelFactory
 import ru.karasevm.privatednstoggle.databinding.ActivityMainBinding
 import ru.karasevm.privatednstoggle.model.DnsServer
+import ru.karasevm.privatednstoggle.util.AppUpdater
 import ru.karasevm.privatednstoggle.util.BackupUtils
 import ru.karasevm.privatednstoggle.util.PreferenceHelper
 import ru.karasevm.privatednstoggle.util.PreferenceHelper.dns_servers
@@ -50,6 +53,13 @@ import ru.karasevm.privatednstoggle.util.ShizukuUtil.grantPermissionWithShizuku
 
 class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogListener,
     DeleteServerDialogFragment.NoticeDialogListener, Shizuku.OnRequestPermissionResultListener {
+
+    private var apkFile: File? = null
+    private val installPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (packageManager.canRequestPackageInstalls()) {
+            apkFile?.let { AppUpdater.installApk(this, it) }
+        }
+    }
 
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var binding: ActivityMainBinding
@@ -113,6 +123,8 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        checkForUpdates()
 
         val subtext = binding.missingPermissionView.errorSubtext
         val fullText = getString(R.string.missing_permission_subtitle)
@@ -321,6 +333,28 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
             }
         }
 
+    private fun checkForUpdates() {
+        dnsServerViewModel.viewModelScope.launch {
+            val update = AppUpdater.getUpdate(applicationContext)
+            if (update != null) {
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle(R.string.update_available)
+                    .setMessage(getString(R.string.update_available_desc, update.version))
+                    .setPositiveButton(R.string.update) { _, _ ->
+                        Toast.makeText(applicationContext, R.string.downloading_update, Toast.LENGTH_SHORT).show()
+                        dnsServerViewModel.viewModelScope.launch {
+                            val file = AppUpdater.downloadUpdate(applicationContext, update.downloadUrl)
+                            if (file != null) {
+                                AppUpdater.installApk(applicationContext, file)
+                            }
+                        }
+                    }
+                    .setNegativeButton(R.string.later, null)
+                    .show()
+            }
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
@@ -328,6 +362,7 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
 
     override fun onResume() {
         super.onResume()
+        AppUpdater.cleanup(applicationContext)
         // Check if WRITE_SECURE_SETTINGS is granted
         if (checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) != PackageManager.PERMISSION_GRANTED) {
             // Check if Shizuku is available
