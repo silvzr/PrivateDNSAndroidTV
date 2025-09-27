@@ -28,7 +28,7 @@
 
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
-            android:authorities="${applicationId}.shizuku"
+            android:authorities="${shizukuProviderAuthority}"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
@@ -37,7 +37,7 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleInstance"
-            android:taskAffinity="${applicationId}.main"
+            android:taskAffinity="${mainTaskAffinity}"
             android:theme="@style/Theme.MyApplication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

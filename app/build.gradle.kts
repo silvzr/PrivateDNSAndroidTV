@@ -48,6 +48,8 @@ android {
                 "proguard-rules.pro"
             )
             manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher_debug"
+            manifestPlaceholders["mainTaskAffinity"] = "ru.karasevm.privatednstoggle.tv.main"
+            manifestPlaceholders["shizukuProviderAuthority"] = "ru.karasevm.privatednstoggle.tv.shizuku"
         }
     }
     compileOptions {
