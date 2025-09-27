@@ -54,6 +54,8 @@ import ru.karasevm.privatednstoggle.util.ShizukuUtil.grantPermissionWithShizuku
 class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogListener,
     DeleteServerDialogFragment.NoticeDialogListener, Shizuku.OnRequestPermissionResultListener {
 
+    private var shizukuPermissionRequested = false
+
     private var apkFile: File? = null
     private val installPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (packageManager.canRequestPackageInstalls()) {
@@ -374,13 +376,14 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                     Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
                 }
                 // request permission if not granted
-                if (!isGranted && !Shizuku.shouldShowRequestPermissionRationale()) {
+                if (!isGranted && !Shizuku.shouldShowRequestPermissionRationale() && !shizukuPermissionRequested) {
                     if (Shizuku.isPreV11() || Shizuku.getVersion() < 11) {
                         requestPermissions(arrayOf(ShizukuProvider.PERMISSION), 1)
                     } else {
                         Shizuku.requestPermission(1)
                     }
-                } else {
+                    shizukuPermissionRequested = true
+                } else if (isGranted) {
                     grantPermission()
                 }
             } else {
@@ -393,6 +396,11 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
                     binding.emptyViewHint.visibility = View.GONE
                 }
             }
+        } else {
+            binding.missingPermissionView.root.visibility = View.GONE
+            binding.topAppBarLayout.visibility = View.VISIBLE
+            binding.recyclerView.visibility = View.VISIBLE
+            binding.floatingActionButton.visibility = View.VISIBLE
         }
     }
 
@@ -476,6 +484,10 @@ class MainActivity : AppCompatActivity(), AddServerDialogFragment.NoticeDialogLi
             Toast.makeText(
                 this, R.string.shizuku_success_toast, Toast.LENGTH_SHORT
             ).show()
+            binding.missingPermissionView.root.visibility = View.GONE
+            binding.topAppBarLayout.visibility = View.VISIBLE
+            binding.recyclerView.visibility = View.VISIBLE
+            binding.floatingActionButton.visibility = View.VISIBLE
         } else {
             binding.missingPermissionView.root.visibility = View.VISIBLE
             binding.topAppBarLayout.visibility = View.GONE
